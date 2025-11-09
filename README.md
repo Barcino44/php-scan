@@ -115,7 +115,7 @@ In this case the proposed yaml has the following corrections:
 
 All these corrections allows the correct instalation using helm.
 
-## Step #3: Provin the application
+## Step #3: Testing the application
 
 Once the corrections are done, we execute ``helm install phpsecscan`` in the root folder and we will have the following result.
 
