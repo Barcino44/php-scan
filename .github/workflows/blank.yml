@@ -1,0 +1,50 @@
+name: Terraform + Trigger Helm Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+
+    env:
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+    steps:
+      - name: Checkout pipelines repo
+        uses: actions/checkout@v4
+
+      - name: Checkout init modules repo
+        uses: actions/checkout@v4
+        with:
+          repository: Automatizacion-2026-1/tf-init
+          token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          path: tf-init
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_JSON }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        working-directory: ./tf-init/environments/dev
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./tf-init/environments/dev
+        run: terraform plan -out=tfplan
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials \
+            --resource-group $RESOURCE_GROUP \
+            --name $AKS_CLUSTER_NAME \
+            --overwrite-existing
